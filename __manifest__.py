@@ -5,7 +5,7 @@
     'category': 'Accounting',
     'summary': 'Aplica percepción RG 5329 IVA 3% a productos alcanzados',
     'license': 'LGPL-3',
-    'depends': ['base', 'product', 'account'],
+    'depends': ['base', 'product', 'account', 'sale'],
     'data': [
         'views/product_view.xml',
         'views/product_data.xml',
