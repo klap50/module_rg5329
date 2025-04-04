@@ -9,7 +9,7 @@ class SaleOrder(models.Model):
         store=True
     )
 
-    @api.depends('order_line.price_subtotal', 'order_line.product_id')
+    @api.depends('order_line.price_subtotal', 'order_line.product_id.x_rg_5329_iva_3')
     def _compute_rg_5329_applicable(self):
         for order in self:
             total = sum(
@@ -17,7 +17,7 @@ class SaleOrder(models.Model):
                 for line in order.order_line
                 if line.product_id.x_rg_5329_iva_3
             )
-            order.rg_5329_applicable = total > 100000
+            order.rg_5329_applicable = total >= 100000
 
     def _recalculate_rg_5329(self):
         rg_5329_tax = self.env['account.tax'].search([
@@ -25,10 +25,12 @@ class SaleOrder(models.Model):
         ], limit=1)
 
         for order in self:
+            # Eliminar impuesto en todas las líneas que lo tengan
             for line in order.order_line:
                 if rg_5329_tax in line.tax_id:
                     line.tax_id -= rg_5329_tax
 
+            # Si corresponde aplicarlo, sumarlo a las líneas RG marcadas
             if order.rg_5329_applicable and rg_5329_tax:
                 for line in order.order_line:
                     if line.product_id.x_rg_5329_iva_3:
@@ -36,11 +38,11 @@ class SaleOrder(models.Model):
 
     @api.model
     def create(self, vals):
-        order = super(SaleOrder, self).create(vals)
+        order = super().create(vals)
         order._recalculate_rg_5329()
         return order
 
     def write(self, vals):
-        res = super(SaleOrder, self).write(vals)
+        res = super().write(vals)
         self._recalculate_rg_5329()
         return res
