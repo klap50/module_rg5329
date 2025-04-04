@@ -36,11 +36,13 @@ class SaleOrder(models.Model):
                     if line.product_id.x_rg_5329_iva_3:
                         line.tax_id |= rg_5329_tax
 
-    @api.model
-    def create(self, vals):
-        order = super().create(vals)
-        order._recalculate_rg_5329()
-        return order
+    @api.model_create_multi
+    def create(self, vals_list):
+        for vals in vals_list:
+            # lógica por cada orden, si es necesario
+            pass
+        return super().create(vals_list)
+
 
     def write(self, vals):
         res = super().write(vals)
