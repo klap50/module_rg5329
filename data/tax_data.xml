@@ -1,0 +1,13 @@
+<odoo>
+  <data noupdate="1">
+    <record id="tax_rg_5329" model="account.tax">
+      <field name="name">RG 5329 - Percepción IVA 3%</field>
+      <field name="amount">3</field>
+      <field name="amount_type">percent</field>
+      <field name="type_tax_use">sale</field>
+      <field name="price_include" eval="False"/>
+      <field name="include_base_amount" eval="False"/>
+      <field name="active" eval="True"/>
+    </record>
+  </data>
+</odoo>
