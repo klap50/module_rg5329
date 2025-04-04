@@ -1,15 +1,16 @@
 {
-    'name': 'RG 5329 Percepción IVA 3%',
+    'name': 'Percepción RG 5329',
     'version': '1.0',
-    'depends': ['sale', 'account', 'l10n_ar'],
-    'author': 'FWCorp',
+    'author': 'Klap / FwCorp',
     'category': 'Accounting',
-    'description': 'Aplica automáticamente la percepción RG 5329 del 3% a productos alcanzados cuando el neto supera los $100.000 y el cliente es Responsable Inscripto.',
+    'summary': 'Aplica percepción RG 5329 IVA 3% a productos alcanzados',
+    'license': 'LGPL-3',
+    'depends': ['base', 'product', 'account'],
     'data': [
-        'data/tax_data.xml',
-        'views/product_view.xml'
+        'views/product_view.xml',
+        'views/product_data.xml',
     ],
     'installable': True,
     'auto_install': False,
-    'application': False
+    'application': False,
 }
