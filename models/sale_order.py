@@ -1,30 +1,36 @@
-from odoo import models, api, fields
-
-class ProductTemplate(models.Model):
-    _inherit = "product.template"
-
-    x_rg_5329_iva_3 = fields.Boolean(string="Percepción RG 5329 IVA 3%", help="Marcar si el producto está alcanzado por la percepción RG 5329.")
+from odoo import models, fields, api
 
 class SaleOrder(models.Model):
-    _inherit = "sale.order"
+    _inherit = 'sale.order'
 
-    @api.onchange("order_line", "partner_id")
-    def _onchange_rg_5329_check(self):
+    @api.depends('order_line.price_total', 'order_line.product_id')
+    def _compute_rg_5329_applicable(self):
         for order in self:
-            if order.partner_id.l10n_ar_afip_responsibility_type_id.code != "1":
-                return
-
-            total_alcanzado = sum(
+            total_rg_5329 = sum(
                 line.price_subtotal
                 for line in order.order_line
-                if line.product_id.product_tmpl_id.x_rg_5329_iva_3
+                if line.product_id.x_rg_5329_iva_3
             )
+            order.rg_5329_applicable = total_rg_5329 > 100000
 
-            for line in order.order_line:
-                if (
-                    line.product_id.product_tmpl_id.x_rg_5329_iva_3
-                    and total_alcanzado > 100000
-                ):
-                    impuesto = self.env.ref("rg5329_percepcion.tax_rg_5329", raise_if_not_found=False)
-                    if impuesto and impuesto not in line.tax_id:
-                        line.tax_id += impuesto
+    rg_5329_applicable = fields.Boolean(
+        string="Aplicar Percepción RG 5329",
+        compute="_compute_rg_5329_applicable",
+        store=True
+    )
+
+    @api.onchange('order_line')
+    def _apply_rg_5329_tax(self):
+        for order in self:
+            if order.rg_5329_applicable:
+                rg_5329_tax = self.env['account.tax'].search([('name', '=', 'Percepción RG 5329 IVA 3%')], limit=1)
+                if rg_5329_tax:
+                    for line in order.order_line:
+                        if line.product_id.x_rg_5329_iva_3:
+                            line.tax_id |= rg_5329_tax
+            else:
+                rg_5329_tax = self.env['account.tax'].search([('name', '=', 'Percepción RG 5329 IVA 3%')], limit=1)
+                if rg_5329_tax:
+                    for line in order.order_line:
+                        if rg_5329_tax in line.tax_id:
+                            line.tax_id -= rg_5329_tax
