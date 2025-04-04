@@ -25,24 +25,26 @@ class SaleOrder(models.Model):
         ], limit=1)
 
         for order in self:
-            # Eliminar impuesto en todas las líneas que lo tengan
             for line in order.order_line:
+                # Remover siempre el impuesto si lo tiene
                 if rg_5329_tax in line.tax_id:
                     line.tax_id -= rg_5329_tax
 
-            # Si corresponde aplicarlo, sumarlo a las líneas RG marcadas
             if order.rg_5329_applicable and rg_5329_tax:
                 for line in order.order_line:
                     if line.product_id.x_rg_5329_iva_3:
                         line.tax_id |= rg_5329_tax
 
+    @api.onchange('order_line')
+    def _onchange_order_line_rg_5329(self):
+        self._compute_rg_5329_applicable()
+        self._recalculate_rg_5329()
+
     @api.model_create_multi
     def create(self, vals_list):
-        for vals in vals_list:
-            # lógica por cada orden, si es necesario
-            pass
-        return super().create(vals_list)
-
+        orders = super().create(vals_list)
+        orders._recalculate_rg_5329()
+        return orders
 
     def write(self, vals):
         res = super().write(vals)
